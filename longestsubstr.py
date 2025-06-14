@@ -10,6 +10,4 @@ class Solution:
             d.add(s[end])
             end+=1
             max_len = max(max_len, end-start)
-        return max_len    
-            
-            
+        return max_len   
