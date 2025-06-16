@@ -1,0 +1,11 @@
+class Solution:
+    def hasCycle(self, head: Optional[ListNode]) -> bool:
+        ht={}
+        current=head
+        while current != None:
+            if current not in ht:
+                ht[current]=0
+            else:
+                return True
+            current=current.next
+        return False
