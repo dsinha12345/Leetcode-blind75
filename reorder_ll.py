@@ -13,7 +13,7 @@ class Solution:
             current=current.next
         head = queue.popleft()
         use_tail = True
-        dummy = head
+        dummy = head 
         while queue:
             if use_tail:
                 element = queue.pop()
