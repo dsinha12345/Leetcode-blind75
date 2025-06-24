@@ -7,7 +7,7 @@ import collections
 class Solution:
     def reorderList(self, head: Optional[ListNode]) -> None:
         queue = deque()
-        current = head
+        current = head 
         while current!=None:
             queue.append(current)
             current=current.next
