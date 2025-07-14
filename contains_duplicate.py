@@ -10,3 +10,4 @@ class Solution:
         if len(nums_set)!=len(nums):
             return True
         return False
+#two methods
