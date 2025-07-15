@@ -20,5 +20,6 @@ class Solution:
         for c in range(col):
             dfs(0,c,pac,heights[0][c])
             dfs(row-1,c,atl,heights[row-1][c])
+
         
         return list(pac.intersection(atl))
