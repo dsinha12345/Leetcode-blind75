@@ -15,6 +15,7 @@ class Solution:
                     while ptr1<ptr2 and nums[ptr2] == nums[ptr2-1]:
                         ptr2-=1
                     ptr1+=1
+                    
                     ptr2-=1
                     
                 elif nums[i]+nums[ptr1]+nums[ptr2]<0:
