@@ -5,3 +5,6 @@ class Solution:
         for i in range(1,len(nums)+1):
             real+=i
         return real - total
+
+#blind75 question 1
+
