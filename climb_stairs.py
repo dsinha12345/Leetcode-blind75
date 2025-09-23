@@ -1,3 +1,4 @@
+
 class Solution:
     def __init__(self):
         self.memo = {0: 1, 1: 1}
