@@ -10,5 +10,5 @@ class Solution:
             minp = min(i, i*minp)
             res = max(maxp,res)
         return res
-
+#this is ai
 
