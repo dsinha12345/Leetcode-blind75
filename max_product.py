@@ -11,4 +11,4 @@ class Solution:
             res = max(maxp,res)
         return res
 #this is ai
-
+# i would never write like this
