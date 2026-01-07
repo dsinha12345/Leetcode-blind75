@@ -1,5 +1,4 @@
 public class GoogleDocsGenerator {
-    
     @InvocableMethod(label='Create Google Doc from Template')
     public static List<Result> generateDocument(List<Request> requests) {
         List<Result> results = new List<Result>();
