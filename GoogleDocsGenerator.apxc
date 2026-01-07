@@ -1,0 +1,128 @@
+public class GoogleDocsGenerator {
+    
+    @InvocableMethod(label='Create Google Doc from Template')
+    public static List<Result> generateDocument(List<Request> requests) {
+        List<Result> results = new List<Result>();
+        
+        for (Request req : requests) {
+            Result res = new Result();
+            
+            try {
+                // Step 1: Copy the template
+                String newDocId = copyTemplate(req.templateId, req.documentTitle);
+                
+                // Step 2: Parse JSON and replace placeholders
+                Map<String, String> fields = (Map<String, String>) 
+                    JSON.deserialize(req.mergeFieldsJson, Map<String, String>.class);
+                mergePlaceholders(newDocId, fields);
+                
+                // Step 3: Create shareable link
+                String docUrl = 'https://docs.google.com/document/d/' + newDocId + '/edit';
+                
+                res.documentId = newDocId;
+                res.documentUrl = docUrl;
+                res.success = true;
+                
+            } catch (Exception e) {
+                res.success = false;
+                res.errorMessage = e.getMessage();
+                System.debug('Error: ' + e.getMessage());
+            }
+            
+            results.add(res);
+        }
+        
+        return results;
+    }
+    
+    private static String copyTemplate(String templateId, String newTitle) {
+    // Use Google Drive API to copy (not Docs API)
+    HttpRequest req = new HttpRequest();
+    req.setEndpoint('callout:GoogleDrive/drive/v3/files/' + templateId + '/copy');
+    req.setMethod('POST');
+    req.setHeader('Content-Type', 'application/json');
+    
+    Map<String, Object> body = new Map<String, Object>{
+        'name' => newTitle
+    };
+    req.setBody(JSON.serialize(body));
+    
+    System.debug('=== COPY REQUEST ===');
+    System.debug('Endpoint: ' + req.getEndpoint());
+    
+    Http http = new Http();
+    HttpResponse res = http.send(req);
+    
+    System.debug('=== COPY RESPONSE ===');
+    System.debug('Status Code: ' + res.getStatusCode());
+    System.debug('Response: ' + res.getBody());
+    
+    if (res.getStatusCode() != 200) {
+        throw new CalloutException('Copy failed: ' + res.getBody());
+    }
+    
+    Map<String, Object> responseMap = 
+        (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+    
+    // Drive API returns 'id', not 'documentId'
+    return (String) responseMap.get('id');
+}
+    
+    private static void mergePlaceholders(String docId, Map<String, String> mergeFields) {
+        List<Map<String, Object>> requests = new List<Map<String, Object>>();
+        
+        for (String placeholder : mergeFields.keySet()) {
+            requests.add(new Map<String, Object>{
+                'replaceAllText' => new Map<String, Object>{
+                    'containsText' => new Map<String, Object>{
+                        'text' => '{{' + placeholder + '}}',
+                        'matchCase' => true
+                    },
+                    'replaceText' => mergeFields.get(placeholder)
+                }
+            });
+        }
+        
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('callout:GoogleDocs/v1/documents/' + docId + ':batchUpdate');
+        req.setMethod('POST');
+        req.setHeader('Content-Type', 'application/json');
+        
+        Map<String, Object> body = new Map<String, Object>{
+            'requests' => requests
+        };
+        req.setBody(JSON.serialize(body));
+        
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+        
+        if (res.getStatusCode() != 200) {
+            throw new CalloutException('Merge failed: ' + res.getBody());
+        }
+    }
+    
+    public class Request {
+        @InvocableVariable(required=true label='Google Doc Template ID')
+        public String templateId;
+        
+        @InvocableVariable(required=true label='New Document Title')
+        public String documentTitle;
+        
+        @InvocableVariable(required=true label='Merge Data (as JSON text)')
+        public String mergeFieldsJson;
+    }
+    
+    public class Result {
+        @InvocableVariable(label='New Document ID')
+        public String documentId;
+        
+        @InvocableVariable(label='Document URL')
+        public String documentUrl;
+        
+        @InvocableVariable(label='Success')
+        public Boolean success;
+        
+        @InvocableVariable(label='Error Message')
+        public String errorMessage;
+    }
+}
